@@ -8,7 +8,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import Widgets from "../components/Widgets/Widgets";
 import { db } from "../firebaseConfig";
 
-export default function Home() {
+export default function Home({posts}) {
   const { data: session } = useSession();
   return (
     <>
@@ -24,7 +24,7 @@ export default function Home() {
 
           <main className="flex">
             <Sidebar />
-            <Feed />
+            <Feed posts={posts}/>
             <Widgets />
           </main>
         </div>
@@ -33,4 +33,16 @@ export default function Home() {
   );
 }
 
-
+export async function getServerSideProps(context) {
+  const posts = await getDocs(
+    query(collection(db, "posts"), orderBy("timeStamp", "desc"))
+  );
+  const docs = posts.docs.map((post) => ({
+    id: post.id,
+    ...post.data(),
+    timeStamp: null,
+  }));
+  return {
+    props: { posts: docs }, // will be passed to the page component as props
+  };
+}
